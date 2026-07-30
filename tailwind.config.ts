@@ -58,15 +58,10 @@ const config: Config = {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
-        "hero-zoom": {
-          from: { transform: "scale(1.08)" },
-          to: { transform: "scale(1)" },
-        },
       },
       animation: {
-        "fade-up": "fade-up 0.7s ease-out both",
+        "fade-up": "fade-up 0.6s ease-out both",
         "fade-in": "fade-in 0.5s ease-out both",
-        "hero-zoom": "hero-zoom 18s ease-out both",
       },
     },
   },
