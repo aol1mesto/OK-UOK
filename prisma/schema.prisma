@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Admin
+  Manager
+  User
+}
+
+enum AuditStatus {
+  pending
+  completed
+  failed
+}
+
+enum ReportStatus {
+  draft
+  submitted
+  sent
+}
+
+model Company {
+  id             String          @id @default(cuid())
+  name           String
+  logo           String?
+  slogan         String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  users          User[]
+  audits         Audit[]
+  weeklyReports  WeeklyReport[]
+  monthlyReports MonthlyReport[]
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String
+  password       String
+  role           Role            @default(User)
+  companyId      String
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  weeklyReports  WeeklyReport[]  @relation("WeeklyReportAuthor")
+  monthlyReports MonthlyReport[] @relation("MonthlyReportAuthor")
+
+  @@index([companyId])
+}
+
+model Audit {
+  id             String          @id @default(cuid())
+  companyId      String
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  date           DateTime        @default(now())
+  status         AuditStatus     @default(pending)
+  checklistItems ChecklistItem[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([companyId])
+  @@index([date])
+}
+
+model ChecklistItem {
+  id          String  @id @default(cuid())
+  auditId     String
+  audit       Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  text        String
+  isCompleted Boolean @default(false)
+  comment     String?
+
+  @@index([auditId])
+}
+
+model WeeklyReport {
+  id        String       @id @default(cuid())
+  companyId String
+  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  weekStart DateTime
+  weekEnd   DateTime
+  data      Json
+  createdBy String
+  author    User         @relation("WeeklyReportAuthor", fields: [createdBy], references: [id])
+  status    ReportStatus @default(draft)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([companyId])
+  @@index([createdBy])
+}
+
+model MonthlyReport {
+  id        String       @id @default(cuid())
+  companyId String
+  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  month     Int
+  year      Int
+  data      Json
+  createdBy String
+  author    User         @relation("MonthlyReportAuthor", fields: [createdBy], references: [id])
+  status    ReportStatus @default(draft)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([companyId])
+  @@index([createdBy])
+}
